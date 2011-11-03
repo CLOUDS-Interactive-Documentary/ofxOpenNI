@@ -23,6 +23,7 @@
 		772B41B5145933D0004DF107 /* libXnVNite_1_4_1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 772B41A7145933D0004DF107 /* libXnVNite_1_4_1.dylib */; };
 		772B420A14595989004DF107 /* ofxOpenNI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 772B420914595989004DF107 /* ofxOpenNI.cpp */; };
 		77BA394A145DAC8000C84F11 /* ofxOpenNIUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 77BA3949145DAC8000C84F11 /* ofxOpenNIUtils.cpp */; };
+		77EB9E331462C12E0011A69D /* ofxOpenNIContext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 77EB9E311462C12E0011A69D /* ofxOpenNIContext.cpp */; };
 		BBAB23CB13894F3D00AA2426 /* GLUT.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BBAB23BE13894E4700AA2426 /* GLUT.framework */; };
 		E4328149138ABC9F0047C5CB /* openFrameworks.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4328148138ABC890047C5CB /* openFrameworks.a */; };
 		E45BE97B0E8CC7DD009D7055 /* AGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45BE9710E8CC7DD009D7055 /* AGL.framework */; };
@@ -213,6 +214,8 @@
 		7786B08413C851BF00769F2B /* ofxOpenNI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxOpenNI.h; sourceTree = "<group>"; };
 		77BA3948145DAC8000C84F11 /* ofxOpenNIUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxOpenNIUtils.h; sourceTree = "<group>"; };
 		77BA3949145DAC8000C84F11 /* ofxOpenNIUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxOpenNIUtils.cpp; sourceTree = "<group>"; };
+		77EB9E311462C12E0011A69D /* ofxOpenNIContext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxOpenNIContext.cpp; sourceTree = "<group>"; };
+		77EB9E321462C12E0011A69D /* ofxOpenNIContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxOpenNIContext.h; sourceTree = "<group>"; };
 		BBAB23BE13894E4700AA2426 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = ../../../libs/glut/lib/osx/GLUT.framework; sourceTree = "<group>"; };
 		E4328143138ABC890047C5CB /* openFrameworksLib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = openFrameworksLib.xcodeproj; path = ../../../libs/openFrameworksCompiled/project/osx/openFrameworksLib.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E45BE9710E8CC7DD009D7055 /* AGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AGL.framework; path = /System/Library/Frameworks/AGL.framework; sourceTree = "<absolute>"; };
@@ -496,6 +499,8 @@
 			children = (
 				7786B08413C851BF00769F2B /* ofxOpenNI.h */,
 				772B420914595989004DF107 /* ofxOpenNI.cpp */,
+				77EB9E321462C12E0011A69D /* ofxOpenNIContext.h */,
+				77EB9E311462C12E0011A69D /* ofxOpenNIContext.cpp */,
 				77BA3948145DAC8000C84F11 /* ofxOpenNIUtils.h */,
 				77BA3949145DAC8000C84F11 /* ofxOpenNIUtils.cpp */,
 			);
@@ -685,6 +690,7 @@
 				E4B69E210A3A1BDC003C02F2 /* testApp.cpp in Sources */,
 				772B420A14595989004DF107 /* ofxOpenNI.cpp in Sources */,
 				77BA394A145DAC8000C84F11 /* ofxOpenNIUtils.cpp in Sources */,
+				77EB9E331462C12E0011A69D /* ofxOpenNIContext.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

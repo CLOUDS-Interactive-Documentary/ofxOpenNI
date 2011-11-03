@@ -1,23 +1,14 @@
 #ifndef	_H_OFXOPENNI
 #define _H_OFXOPENNI
 
-#include <XnOpenNI.h>
-#include <XnCodecIDs.h>
-#include <XnCppWrapper.h>
-#include <XnLog.h>
-#include <XnTypes.h>
-
+#include "ofxOpenNIContext.h"
 #include "ofxOpenNIUtils.h"
 
-#include "ofLog.h"
-#include "ofConstants.h"
-#include "ofPixels.h"
-#include "ofTexture.h"
 #include "ofThread.h"
 
 using namespace xn;
 
-class ofxOpenNI : public ofThread {//: public ofxOpenNIBaseContext {
+class ofxOpenNI : public ofThread {
 	
 public:
 	
@@ -44,7 +35,7 @@ public:
 	bool addAudioGenerator();
 	bool addUserGenerator();
 	bool addPlayerGenerator();
-	
+
 	void update();
 	
 	void drawDepth();
@@ -57,7 +48,7 @@ public:
 	
 	float getWidth();
 	float getHeight();
-
+	
 	int getNumDevices();
 	
 	bool isNewFrame();
@@ -105,25 +96,20 @@ protected:
 	
 private:
 	
-	bool initContext();
-	int initDevice();
-	bool addLicence(string sVendor, string sKey);
-	void setLogLevel(XnLogSeverity logLevel);
-	
-	bool addGenerator(bool& g_bNodeIsOn, xn::MapGenerator& g_Node);
-	
 	//void openCommon();
 	//void initConstants();
 	void readFrame();
 	void generateDepthPixels();
 	void generateImagePixels();
 	void generateIRPixels();
+	
 	void allocateDepthBuffers();
 	void allocateDepthRawBuffers();
 	void allocateImageBuffers();
 	void allocateIRBuffers();
 	
 	int numDevices;
+	bool bIsThreaded;
 	
 	bool g_bIsDepthOn;
 	bool g_bIsImageOn;
@@ -132,8 +118,6 @@ private:
 	bool g_bIsPlayerOn;
 	bool g_bIsDepthRawOnOption;
 	
-	bool bIsThreaded;
-	bool bIsContextReady;
 	bool bUseTexture;
 	bool bNewPixels;
 	bool bNewFrame;
@@ -151,7 +135,7 @@ private:
 	ofShortPixels* backDepthRawPixels;
 	ofShortPixels* currentDepthRawPixels;
 	
-	// rgb
+	// image
 	ofTexture imageTexture;
 	ofPixels imagePixels[2];
 	ofPixels* backImagePixels;
@@ -164,19 +148,7 @@ private:
 	xn::AudioMetaData g_AudioMD;
 	
 	// generators/nodes
-	
 	xn::MockDepthGenerator mockDepth;
-	xn::ProductionNode *g_pPrimary;
-	
-	// generators/nodes
-	xn::Context g_Context;
-	xn::Device g_Device;
-	xn::DepthGenerator g_Depth;
-	xn::ImageGenerator g_Image;
-	xn::IRGenerator g_IR;
-	xn::UserGenerator g_User;
-	xn::AudioGenerator g_Audio;
-	xn::Player g_Player;
 	
 	int instanceID;
 	

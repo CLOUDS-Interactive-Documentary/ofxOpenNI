@@ -9,8 +9,6 @@
 
 #include "ofxOpenNI.h"
 
-static xn::Context g_GlobalDeviceContext;
-static bool g_bIsGlobalDeviceContextReady = false;
 string ofxOpenNI::LOG_NAME = "ofxOpenNI";
 static bool rainbowPalletInit = false;
 static int instanceCount = -1;
@@ -21,7 +19,7 @@ XnUInt8 PalletIntsB [256] = {0};
 
 //--------------------------------------------------------------
 static void CreateRainbowPallet() {
-	if(rainbowPalletInit) return;
+	if (rainbowPalletInit) return;
 	
 	unsigned char r, g, b;
 	for (int i=1; i<255; i++) {
@@ -61,13 +59,10 @@ static void CreateRainbowPallet() {
 ofxOpenNI::ofxOpenNI() {
 	
 	instanceCount++;
-	instanceID = instanceCount;
-	
-	CreateRainbowPallet();
+	instanceID = instanceCount; // TODO: this should be replaced/combined with a listDevices and setDeviceID methods
 	
 	numDevices = 0;
 	bIsThreaded = false;
-	bIsContextReady = false;
 	
 	g_bIsDepthOn = false;
 	g_bIsDepthRawOnOption = false;
@@ -80,223 +75,126 @@ ofxOpenNI::ofxOpenNI() {
 	
 	bUseTexture = true;
 	bNewPixels = false;
-	bNewFrame = false;
+	bNewFrame = false;	
 	
-	g_pPrimary = NULL;
+	CreateRainbowPallet();
+	
 }
 
 //--------------------------------------------------------------
 ofxOpenNI::~ofxOpenNI() {
-	if (bIsThreaded) stopThread();
-	g_Depth.Release();
-	g_Image.Release();
-	g_IR.Release();
-	g_User.Release();
-	g_Audio.Release();
-	g_Context.Release();
+	ofLogVerbose(LOG_NAME) << "Shuting down device:" << instanceID;
+	if (bIsThreaded) {
+		lock();
+		stopThread();
+	}
 }
 
 //--------------------------------------------------------------
 bool ofxOpenNI::setup(bool threaded) {
-	
-	ofLogWarning(LOG_NAME) << "THIS IS EXPERIMENTAL CODE!! TRYING TO GET MULTIPLE CONTEXTS WORKING (IE., ONE PER DEVICE). IT DOESN'T WORK - NOT SURE WHY :-(";
-	
+
 	XnStatus nRetVal;
 	
-//	nRetVal = g_Context.StopGeneratingAll();
-//	ofLogVerbose(LOG_NAME) << "Stop ALL generators:" << xnGetStatusString(nRetVal);
+	//	nRetVal = g_Context.StopGeneratingAll();
+	//	ofLogVerbose(LOG_NAME) << "Stop ALL generators:" << xnGetStatusString(nRetVal);
 	
 	bIsThreaded = threaded;
 	
-	if (!bIsContextReady) {
-		if (!initContext()) {
+	if (!openNIContext->getIsContextReady()) {
+		if (!openNIContext->initContext()) {
 			ofLogError(LOG_NAME) << "Context could not be intitilised";
 			return false;
 		}
 	}
 	
-	initDevice();
+	//initDevice();
 	
-	if (numDevices > 0) {
+	if (openNIContext->getNumDevices() > 0) {
 		
-		ofLogNotice(LOG_NAME) << "Found" << numDevices << "devices.";
+		ofLogNotice(LOG_NAME) << "Found" << openNIContext->getNumDevices() << "devices.";
 		
-//		nRetVal = g_Context.StartGeneratingAll();
-//		ofLogVerbose(LOG_NAME) << "Start ALL generators:" << xnGetStatusString(nRetVal);
+		//		nRetVal = g_Context.StartGeneratingAll();
+		//		ofLogVerbose(LOG_NAME) << "Start ALL generators:" << xnGetStatusString(nRetVal);
 		
-		if (bIsThreaded) startThread(false, false);
-		
-		
+		//startThread(false, false);
+		startThread(true, false);
 		
 		return true;
 	} else {
 		ofLogNotice(LOG_NAME) << "No Devices found!"; //Setting up players...
-//		numDevices = enumerateAndCreate(XN_NODE_TYPE_PLAYER, g_Player);
-//		if (numDevices > 0) {
-//			if (bIsThreaded) startThread(false, false);
-//			nRetVal = g_Context.StartGeneratingAll();
-//			ofLogVerbose(LOG_NAME) << "Start ALL generators:" << xnGetStatusString(nRetVal);
-//			
-//			return true;
-//		} else {
-//			ofLogError(LOG_NAME) << "Could not setup Players!";
-//			return false;
-//		}
+		//		numDevices = enumerateAndCreate(XN_NODE_TYPE_PLAYER, g_Player);
+		//		if (numDevices > 0) {
+		//			if (bIsThreaded) startThread(false, false);
+		//			nRetVal = g_Context.StartGeneratingAll();
+		//			ofLogVerbose(LOG_NAME) << "Start ALL generators:" << xnGetStatusString(nRetVal);
+		//			
+		//			return true;
+		//		} else {
+		//			ofLogError(LOG_NAME) << "Could not setup Players!";
+		//			return false;
+		//		}
 	}
 	
-}
-
-//--------------------------------------------------------------
-bool ofxOpenNI::initContext() {
-	
-	XnStatus nRetVal;
-	nRetVal = g_Context.Init();
-	
-	ofLogVerbose(LOG_NAME) << "OpenNI Context initilized:" << xnGetStatusString(nRetVal);
-	
-	if (nRetVal == XN_STATUS_OK) {
-		bIsContextReady = true;
-	} else {
-		bIsContextReady =  false;
-	}
-	
-	return bIsContextReady;
-}
-
-//--------------------------------------------------------------
-int ofxOpenNI::initDevice() {
-	
-	NodeInfoList list;
-	EnumerationErrors errors;
-	XnStatus nRetVal;
-	int nodeIndex;
-	
-	if (!g_bIsGlobalDeviceContextReady) {
-		nRetVal = g_GlobalDeviceContext.Init();
-		ofLogNotice(LOG_NAME) << "Initilising Global xn::Context" << xnGetStatusString(nRetVal);
-		if (nRetVal == XN_STATUS_OK) g_bIsGlobalDeviceContextReady = true;
-	}
-	
-	nRetVal = g_GlobalDeviceContext.EnumerateProductionTrees(XN_NODE_TYPE_DEVICE, NULL, list, &errors);
-	
-	nodeIndex = 0;
-	for (NodeInfoList::Iterator it = list.Begin(); it != list.End(); ++it, ++nodeIndex) {
-		if (nodeIndex == instanceID) {
-			NodeInfo nInfo = *it;
-			nRetVal = g_Context.CreateProductionTree(nInfo);
-			ofLogNotice(LOG_NAME) << "Create device:" << xnGetStatusString(nRetVal) << "id:" << nodeIndex << nInfo.GetCreationInfo();
-		}
-		
-	}
-	
-	//	nRetVal = g_GlobalDeviceContext.EnumerateProductionTrees(XN_NODE_TYPE_IR, NULL, list, &errors);
-	//	ofLogNotice(LOG_NAME) << "Enumerate ir nodes:" << xnGetStatusString(nRetVal);
-	//	nRetVal = g_GlobalDeviceContext.EnumerateProductionTrees(XN_NODE_TYPE_AUDIO, NULL, list, &errors);
-	//	ofLogNotice(LOG_NAME) << "Enumerate audio nodes:" << xnGetStatusString(nRetVal);
-	//	nRetVal = g_GlobalDeviceContext.EnumerateProductionTrees(XN_NODE_TYPE_USER, NULL, list, &errors);
-	//	ofLogNotice(LOG_NAME) << "Enumerate user nodes:" << xnGetStatusString(nRetVal);
-	//	nRetVal = g_GlobalDeviceContext.EnumerateProductionTrees(XN_NODE_TYPE_PLAYER, NULL, list, &errors);
-	//	ofLogNotice(LOG_NAME) << "Enumerate player nodes:" << xnGetStatusString(nRetVal);
-	
-	numDevices = nodeIndex;
-	return numDevices;
 }
 
 //--------------------------------------------------------------
 bool ofxOpenNI::addDepthGenerator() {
-	NodeInfoList list;
-	EnumerationErrors errors;
 	XnStatus nRetVal;
-	if (!bIsContextReady) {
+	ofLogVerbose(LOG_NAME) << "Add depth generator...";
+	if (!openNIContext->getIsContextReady()) {
 		ofLogError(LOG_NAME) << "Context is not setup - please call ofxOpenNI::setup() first";
 		g_bIsDepthOn = false;
 	}
-	nRetVal = g_GlobalDeviceContext.EnumerateProductionTrees(XN_NODE_TYPE_DEPTH, NULL, list, &errors);
-	ofLogNotice(LOG_NAME) << "Enumerate depth nodes:" << xnGetStatusString(nRetVal);
-	if (!g_bIsDepthOn && !g_Depth.IsValid()) {
-		nRetVal = g_Depth.Create(g_Context);
-		ofLogNotice(LOG_NAME) << g_Depth.GetName() << "generator create:" << xnGetStatusString(nRetVal);
-		nRetVal = g_Depth.StartGenerating();
-		ofLogNotice(LOG_NAME) << g_Image.GetName() << "generator start:" << xnGetStatusString(nRetVal);
-		if (nRetVal == XN_STATUS_OK) {
-			g_bIsDepthOn = true;
-		} else {
-			g_bIsDepthOn = false;
-		}
-	} else {
-		ofLogError(LOG_NAME) << g_Depth.GetName() << "generator already exists!";
-		//g_bIsDepthOn = false; // or should this be true?
-	}
-	
-	
-	if (g_bIsDepthOn){
+	if (openNIContext->getDepthGenerator(instanceID).IsValid()) {
+		g_bIsDepthOn = true;
 		allocateDepthBuffers();
+		nRetVal = openNIContext->getDepthGenerator(instanceID).StartGenerating();
+		ofLogVerbose(LOG_NAME) << "Starting depth generator" << xnGetStatusString(nRetVal);
+	} else {
+		ofLogError(LOG_NAME) << "Depth generator is invalid!";
+		g_bIsDepthOn = false;
 	}
-	
 	return g_bIsDepthOn;
 }
 
 //--------------------------------------------------------------
 bool ofxOpenNI::addImageGenerator() {
-	NodeInfoList list;
-	EnumerationErrors errors;
 	XnStatus nRetVal;
-	if (!bIsContextReady) {
+	ofLogVerbose(LOG_NAME) << "Add image generator...";
+	if (!openNIContext->getIsContextReady()) {
 		ofLogError(LOG_NAME) << "Context is not setup - please call ofxOpenNI::setup() first";
 		g_bIsImageOn = false;
 	}
-	nRetVal = g_GlobalDeviceContext.EnumerateProductionTrees(XN_NODE_TYPE_IMAGE, NULL, list, &errors);
-	ofLogNotice(LOG_NAME) << "Enumerate image nodes:" << xnGetStatusString(nRetVal);
-	if (!g_bIsImageOn && !g_Image.IsValid()) {
-		nRetVal = g_Image.Create(g_Context);
-		ofLogNotice(LOG_NAME) << g_Image.GetName() << "generator create:" << xnGetStatusString(nRetVal);
-		nRetVal = g_Image.StartGenerating();
-		ofLogNotice(LOG_NAME) << g_Image.GetName() << "generator start:" << xnGetStatusString(nRetVal);
-		if (nRetVal == XN_STATUS_OK) {
-			g_bIsImageOn = true;
-		} else {
-			g_bIsImageOn = false;
-		}
-	} else {
-		ofLogError(LOG_NAME) << g_Image.GetName() << "generator already exists!";
-		//g_bIsImageOn = false; // or should this be true?
-	}
-	
-	
-	if (g_bIsImageOn){
+	if (openNIContext->getImageGenerator(instanceID).IsValid()) {
+		g_bIsImageOn = true;
 		allocateImageBuffers();
+		nRetVal = openNIContext->getImageGenerator(instanceID).StartGenerating();
+		ofLogVerbose() << "Starting image generator" << xnGetStatusString(nRetVal);
+	} else {
+		ofLogError(LOG_NAME) << "Image generator is invalid!";
+		g_bIsImageOn = false;
 	}
-	
 	return g_bIsImageOn;
 }
 
 //--------------------------------------------------------------
 bool ofxOpenNI::addInfraGenerator() {
 	XnStatus nRetVal;
-	if (!bIsContextReady) {
+	ofLogVerbose(LOG_NAME) << "Add ir generator...";
+	ofLogWarning(LOG_NAME) << "IR GENERATOR IS NOT QUITE WORKING YET!";
+	if (!openNIContext->getIsContextReady()) {
 		ofLogError(LOG_NAME) << "Context is not setup - please call ofxOpenNI::setup() first";
 		g_bIsIROn = false;
 	}
-	if (!g_bIsIROn && !g_IR.IsValid()) {
-		nRetVal = g_IR.Create(g_Context);
-		ofLogNotice(LOG_NAME) << g_IR.GetName() << "generator create:" << xnGetStatusString(nRetVal);
-		nRetVal = g_IR.StartGenerating();
-		ofLogNotice(LOG_NAME) << g_Image.GetName() << "generator start:" << xnGetStatusString(nRetVal);
-		if (nRetVal == XN_STATUS_OK) {
-			g_bIsIROn = true;
-		} else {
-			g_bIsIROn = false;
-		}
-	} else {
-		ofLogError(LOG_NAME) << g_Image.GetName() << "generator already exists!";
-		//g_bIsIROn = false; // or should this be true?
-	}
-	
-	
-	if (g_bIsIROn){
+	if (openNIContext->getIRGenerator(instanceID).IsValid()) {
+		g_bIsIROn = true;
 		allocateIRBuffers();
+		nRetVal = openNIContext->getIRGenerator(instanceID).StartGenerating();
+		ofLogVerbose() << "Starting ir generator" << xnGetStatusString(nRetVal);
+	} else {
+		ofLogError(LOG_NAME) << "Image generator is invalid!";
+		g_bIsIROn = false;
 	}
-	
 	return g_bIsIROn;
 }
 
@@ -315,10 +213,9 @@ bool ofxOpenNI::addPlayerGenerator() {
 	ofLogWarning(LOG_NAME) << "Not yet implimented";
 }
 
-
 //--------------------------------------------------------------
-void ofxOpenNI::allocateDepthBuffers(){
-	if(g_bIsDepthOn){
+void ofxOpenNI::allocateDepthBuffers() {
+	if (g_bIsDepthOn) {
 		// make new map mode -> default to 640 x 480 @ 30fps
 		// TODO: shift this to a setSize or make part of int/setup request
 		XnMapOutputMode mapMode;
@@ -326,20 +223,20 @@ void ofxOpenNI::allocateDepthBuffers(){
 		mapMode.nXRes = XN_VGA_X_RES;
 		mapMode.nYRes = XN_VGA_Y_RES;
 		mapMode.nFPS  = 30;
-		nRetVal = g_Depth.SetMapOutputMode(mapMode);
-		maxDepth = g_Depth.GetDeviceMaxDepth();
+		nRetVal = openNIContext->getDepthGenerator(instanceID).SetMapOutputMode(mapMode);
+		maxDepth = openNIContext->getDepthGenerator(instanceID).GetDeviceMaxDepth();
 		ofLogVerbose(LOG_NAME) << "Setting depth resolution:" << xnGetStatusString(nRetVal) << mapMode.nXRes << mapMode.nYRes << maxDepth << mapMode.nFPS;
 		depthPixels[0].allocate(mapMode.nXRes, mapMode.nYRes, OF_IMAGE_COLOR_ALPHA);
 		depthPixels[1].allocate(mapMode.nXRes, mapMode.nYRes, OF_IMAGE_COLOR_ALPHA);
 		currentDepthPixels = &depthPixels[0];
 		backDepthPixels = &depthPixels[1];
-		if(bUseTexture) depthTexture.allocate(mapMode.nXRes, mapMode.nYRes, GL_RGBA);
+		if (bUseTexture) depthTexture.allocate(mapMode.nXRes, mapMode.nYRes, GL_RGBA);
 	}
 }
 
 //--------------------------------------------------------------
-void ofxOpenNI::allocateDepthRawBuffers(){
-	if(g_bIsDepthRawOnOption){
+void ofxOpenNI::allocateDepthRawBuffers() {
+	if (g_bIsDepthRawOnOption) {
 		// make new map mode -> default to 640 x 480 @ 30fps
 		// TODO: shift this to a setSize or make part of int/setup request
 		XnMapOutputMode mapMode;
@@ -347,8 +244,8 @@ void ofxOpenNI::allocateDepthRawBuffers(){
 		mapMode.nXRes = XN_VGA_X_RES;
 		mapMode.nYRes = XN_VGA_Y_RES;
 		mapMode.nFPS  = 30;
-		nRetVal = g_Depth.SetMapOutputMode(mapMode);
-		maxDepth = g_Depth.GetDeviceMaxDepth();
+		nRetVal = openNIContext->getDepthGenerator(instanceID).SetMapOutputMode(mapMode);
+		maxDepth = openNIContext->getDepthGenerator(instanceID).GetDeviceMaxDepth();
 		ofLogVerbose(LOG_NAME) << "Setting depth resolution:" << xnGetStatusString(nRetVal) << mapMode.nXRes << mapMode.nYRes << maxDepth << mapMode.nFPS;
 		depthRawPixels[0].allocate(mapMode.nXRes, mapMode.nYRes, OF_PIXELS_MONO);
 		depthRawPixels[1].allocate(mapMode.nXRes, mapMode.nYRes, OF_PIXELS_MONO);
@@ -358,8 +255,8 @@ void ofxOpenNI::allocateDepthRawBuffers(){
 }
 
 //--------------------------------------------------------------
-void ofxOpenNI::allocateImageBuffers(){
-	if(g_bIsImageOn){
+void ofxOpenNI::allocateImageBuffers() {
+	if (g_bIsImageOn) {
 		// make new map mode -> default to 640 x 480 @ 30fps
 		// TODO: shift this to a setSize or make part of int/setup request
 		XnMapOutputMode mapMode;
@@ -367,19 +264,19 @@ void ofxOpenNI::allocateImageBuffers(){
 		mapMode.nXRes = XN_VGA_X_RES;
 		mapMode.nYRes = XN_VGA_Y_RES;
 		mapMode.nFPS  = 30;
-		nRetVal = g_Image.SetMapOutputMode(mapMode);
+		nRetVal = openNIContext->getImageGenerator(instanceID).SetMapOutputMode(mapMode);
 		ofLogVerbose(LOG_NAME) << "Setting image resolution:" << xnGetStatusString(nRetVal) << mapMode.nXRes << mapMode.nYRes << mapMode.nFPS;
 		imagePixels[0].allocate(mapMode.nXRes, mapMode.nYRes, OF_IMAGE_COLOR);
 		imagePixels[1].allocate(mapMode.nXRes, mapMode.nYRes, OF_IMAGE_COLOR);
 		currentImagePixels = &imagePixels[0];
 		backImagePixels = &imagePixels[1];
-		if(bUseTexture) imageTexture.allocate(mapMode.nXRes, mapMode.nYRes, GL_RGB);
+		if (bUseTexture) imageTexture.allocate(mapMode.nXRes, mapMode.nYRes, GL_RGB);
 	}
 }
 
 //--------------------------------------------------------------
-void ofxOpenNI::allocateIRBuffers(){
-	if(g_bIsIROn){
+void ofxOpenNI::allocateIRBuffers() {
+	if (g_bIsIROn) {
 		// make new map mode -> default to 640 x 480 @ 30fps
 		// TODO: shift this to a setSize or make part of int/setup request
 		XnMapOutputMode mapMode;
@@ -387,13 +284,13 @@ void ofxOpenNI::allocateIRBuffers(){
 		mapMode.nXRes = XN_VGA_X_RES;
 		mapMode.nYRes = XN_VGA_Y_RES;
 		mapMode.nFPS  = 30;
-		nRetVal = g_IR.SetMapOutputMode(mapMode);
+		nRetVal = openNIContext->getIRGenerator(instanceID).SetMapOutputMode(mapMode);
 		ofLogVerbose(LOG_NAME) << "Setting ir resolution:" << xnGetStatusString(nRetVal) << mapMode.nXRes << mapMode.nYRes << mapMode.nFPS;
 		imagePixels[0].allocate(mapMode.nXRes, mapMode.nYRes, OF_IMAGE_GRAYSCALE);
 		imagePixels[1].allocate(mapMode.nXRes, mapMode.nYRes, OF_IMAGE_GRAYSCALE);
 		currentImagePixels = &imagePixels[0];
 		backImagePixels = &imagePixels[1];
-		if(bUseTexture) imageTexture.allocate(mapMode.nXRes, mapMode.nYRes, GL_LUMINANCE);
+		if (bUseTexture) imageTexture.allocate(mapMode.nXRes, mapMode.nYRes, GL_LUMINANCE);
 	}
 }
 
@@ -419,12 +316,12 @@ void ofxOpenNI::drawDepth(float x, float y, float w, float h) {
 
 //--------------------------------------------------------------
 void ofxOpenNI::drawImage() {
-	if (bUseTexture) drawImage(0, 0, getWidth(), getHeight());
+	if (bUseTexture) drawImage(0, 0, g_ImageMD.XRes(), g_ImageMD.YRes());
 }
 
 //--------------------------------------------------------------
 void ofxOpenNI::drawImage(float x, float y) {
-	if (bUseTexture) drawImage(x, y, getWidth(), getHeight());
+	if (bUseTexture) drawImage(x, y, g_ImageMD.XRes(), g_ImageMD.YRes());
 }
 
 //--------------------------------------------------------------
@@ -433,101 +330,112 @@ void ofxOpenNI::drawImage(float x, float y, float w, float h) {
 }
 
 //--------------------------------------------------------------
-void ofxOpenNI::setDepthColoring(DepthColoring coloring){
+void ofxOpenNI::setDepthColoring(DepthColoring coloring) {
 	depthColoring = coloring;
 }
 
 //--------------------------------------------------------------
-void ofxOpenNI::readFrame(){
+void ofxOpenNI::readFrame() {
 	
-	if (g_Depth.IsValid() && g_bIsDepthOn){
-		g_Depth.GetMetaData(g_DepthMD);
-		//generateDepthPixels();
+	lock(); // with this here I get 350-460 fps with 2 Kinects
+	
+	if (openNIContext->getDepthGenerator(instanceID).IsValid() && g_bIsDepthOn) {
+		openNIContext->getDepthGenerator(instanceID).GetMetaData(g_DepthMD);
+		generateDepthPixels();
 	}
 	
-	if (g_Image.IsValid() && g_bIsImageOn){
-		g_Image.GetMetaData(g_ImageMD);
-		//generateImagePixels();
+	if (openNIContext->getImageGenerator(instanceID).IsValid() && g_bIsImageOn) {
+		openNIContext->getImageGenerator(instanceID).GetMetaData(g_ImageMD);
+		generateImagePixels();
 	}
 	
-	if (g_IR.IsValid() && g_bIsIROn){
-		g_IR.GetMetaData(g_IrMD);
-		//generateIRPixels();
+	if (openNIContext->getIRGenerator(instanceID).IsValid() && g_bIsIROn) {
+		openNIContext->getIRGenerator(instanceID).GetMetaData(g_IrMD);
+		generateIRPixels();
 	}
 	
-	if (g_Audio.IsValid() && g_bIsAudioOn){
-		g_Audio.GetMetaData(g_AudioMD);
-	}
+//	if (openNIContext->getAudioGenerator(instanceID).IsValid() && g_bIsAudioOn) {
+//		openNIContext->getAudioGenerator(instanceID).GetMetaData(g_AudioMD);
+//	}
+
+//	lock();
+//	
+//	if (g_bIsDepthOn) generateDepthPixels();
+//	if (g_bIsImageOn) generateImagePixels();
+//	if (g_bIsIROn) generateIRPixels();
 	
-	//if (bIsThreaded) lock();
+// I really don't think it's necessary to back buffer the image/ir/depth pixels
+// as I understand it the GetMetaData() call is already acting as a back buffer
+// since it is fetching the pixel data from the xn::Context which we then 'copy'
+// during our generateDepth/Image/IRPixels() methods...
 	
-	if (g_bIsDepthOn) generateDepthPixels();
-	if (g_bIsImageOn) generateImagePixels();
-	if (g_bIsIROn) generateIRPixels();
-	
-//	if(g_bIsDepthOn){
+//	if (g_bIsDepthOn) {
 //		swap(backDepthPixels, currentDepthPixels);
 //		if (g_bIsDepthRawOnOption) {
 //			swap(backDepthRawPixels, currentDepthRawPixels);
 //		}
 //	}
-//		
-//	if(g_bIsImageOn){
+//	if (g_bIsImageOn || g_bIsIROn) {
 //		swap(backImagePixels, currentImagePixels);
 //	}
+	
 	bNewPixels = true;
 	
-	//if (bIsThreaded) unlock();
+	unlock();
 }
 
 //--------------------------------------------------------------
-bool ofxOpenNI::isNewFrame(){
+bool ofxOpenNI::isNewFrame() {
 	return bNewFrame;
 }
 
-//--------------------------------------------------------------
 void ofxOpenNI::threadedFunction() {
-	while(isThreadRunning()){
-		//readFrame();
+	while(isThreadRunning()) {
+		readFrame();
 	}
 }
 
 //--------------------------------------------------------------
-void ofxOpenNI::update(){
-//	if(!bIsThreaded){
-//		readFrame();
-//	}else{
-//		//lock();
-//	}
-//	
-//	if(bNewPixels){
-//		if(g_bIsDepthOn&& bUseTexture){
-//			depthTexture.loadData(*backDepthPixels);
-//		}
-//		if((g_bIsImageOn || g_bIsIROn) && bUseTexture){
-//			imageTexture.loadData(*backImagePixels);
-//		}
-//		bNewPixels = false;
-//		bNewFrame = true;
-//	}
+void ofxOpenNI::update() {
+	if (!bIsThreaded) {
+		readFrame();
+	} else {
+		//lock(); // if I uncomment this I get ~120-180 fps with 2 Kinects 
+	}
+	
+	if (bNewPixels) {
+		if (bUseTexture && g_bIsDepthOn) {
+			//depthTexture.loadData(*currentDepthPixels);
+			depthTexture.loadData(*backDepthPixels);		// do we need to lock and unlock here?
+		}
+		if (bUseTexture && (g_bIsImageOn || g_bIsIROn)) {
+			//imageTexture.loadData(*currentImagePixels);
+			imageTexture.loadData(*backImagePixels);
+		}
+		if (bIsThreaded) lock(); // is this worthwhile or not?
+		bNewPixels = false;
+		bNewFrame = true;
+		if (bIsThreaded) unlock();
+	}
 	
 	
-//	if (bIsThreaded) unlock();
+	if (bIsThreaded) {
+		//unlock();
+	}
 }
 
 //--------------------------------------------------------------
-bool ofxOpenNI::toggleCalibratedRGBDepth(){
+bool ofxOpenNI::toggleCalibratedRGBDepth() {
 	
-	if (!g_Image.IsValid()) {
+	if (!openNIContext->getImageGenerator(instanceID).IsValid()) {
 		ofLogError(LOG_NAME) << "No Image generator found: cannot register viewport";
 		return false;
 	}
 	
 	// Toggle registering view point to image map
-	if (g_Depth.IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT))
-	{
+	if (openNIContext->getDepthGenerator(instanceID).IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT)) {
 		
-		if(g_Depth.GetAlternativeViewPointCap().IsViewPointAs(g_Image)) {
+		if (openNIContext->getDepthGenerator(instanceID).GetAlternativeViewPointCap().IsViewPointAs(openNIContext->getImageGenerator(instanceID))) {
 			disableCalibratedRGBDepth();
 		} else {
 			enableCalibratedRGBDepth();
@@ -539,19 +447,19 @@ bool ofxOpenNI::toggleCalibratedRGBDepth(){
 }
 
 //--------------------------------------------------------------
-bool ofxOpenNI::enableCalibratedRGBDepth(){
-	if (!g_Image.IsValid()) {
+bool ofxOpenNI::enableCalibratedRGBDepth() {
+	if (!openNIContext->getImageGenerator(instanceID).IsValid()) {
 		ofLogError(LOG_NAME) << "No Image generator found: cannot register viewport";
 		return false;
 	}
 	
 	// Register view point to image map
-	if(g_Depth.IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT)){
+	if (openNIContext->getDepthGenerator(instanceID).IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT)) {
 		
-		XnStatus nRetVal = g_Depth.GetAlternativeViewPointCap().SetViewPoint(g_Image);
+		XnStatus nRetVal = openNIContext->getDepthGenerator(instanceID).GetAlternativeViewPointCap().SetViewPoint(openNIContext->getImageGenerator(instanceID));
 		ofLogVerbose(LOG_NAME) << "Register viewpoint depth to RGB:" << xnGetStatusString(nRetVal);
-		if(nRetVal!=XN_STATUS_OK) return false;
-	}else{
+		if (nRetVal!=XN_STATUS_OK) return false;
+	} else {
 		ofLogVerbose(LOG_NAME) << "Alternative viewpoint not supported";
 		return false;
 	}
@@ -560,14 +468,14 @@ bool ofxOpenNI::enableCalibratedRGBDepth(){
 }
 
 //--------------------------------------------------------------
-bool ofxOpenNI::disableCalibratedRGBDepth(){
+bool ofxOpenNI::disableCalibratedRGBDepth() {
 	
 	// Unregister view point from (image) any map
-	if (g_Depth.IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT)) {
-		XnStatus nRetVal = g_Depth.GetAlternativeViewPointCap().ResetViewPoint();
+	if (openNIContext->getDepthGenerator(instanceID).IsCapabilitySupported(XN_CAPABILITY_ALTERNATIVE_VIEW_POINT)) {
+		XnStatus nRetVal = openNIContext->getDepthGenerator(instanceID).GetAlternativeViewPointCap().ResetViewPoint();
 		ofLogVerbose(LOG_NAME) << "Unregister viewpoint depth to RGB:" << xnGetStatusString(nRetVal);
-		if(nRetVal!=XN_STATUS_OK) return false;
-	}else{
+		if (nRetVal!=XN_STATUS_OK) return false;
+	} else {
 		ofLogVerbose(LOG_NAME) << "Alternative viewpoint not supported";
 		return false;
 	}
@@ -576,23 +484,28 @@ bool ofxOpenNI::disableCalibratedRGBDepth(){
 }
 
 //--------------------------------------------------------------
-void ofxOpenNI::generateIRPixels(){
+void ofxOpenNI::generateIRPixels() {
+	// TODO: make this work!!!
 	const XnUInt8* pImage = (XnUInt8*)g_IrMD.Data();
-	backImagePixels->setFromPixels(pImage, g_IrMD.XRes(),g_IrMD.YRes(),OF_IMAGE_GRAYSCALE);
+//	unsigned char * pixels = backImagePixels->getPixels();
+//	int j = 0;
+//	for (int i = 0; i < g_IrMD.XRes() * g_IrMD.YRes()*2; i+=2, j++) {		// Don't ask me why ;-)
+//		pixels[j] = pImage[i];
+//	}
+	backImagePixels->setFromPixels(pImage, g_IrMD.XRes(), g_IrMD.YRes(), OF_IMAGE_GRAYSCALE);
 }
 
 //--------------------------------------------------------------
-void ofxOpenNI::generateImagePixels(){
+void ofxOpenNI::generateImagePixels() {
 	const XnUInt8* pImage = g_ImageMD.Data();
-	backImagePixels->setFromPixels(pImage, g_ImageMD.XRes(),g_ImageMD.YRes(),OF_IMAGE_COLOR);
+	backImagePixels->setFromPixels(pImage, g_ImageMD.XRes(), g_ImageMD.YRes(), OF_IMAGE_COLOR);
 }
 
 //--------------------------------------------------------------
-void ofxOpenNI::generateDepthPixels(){
+void ofxOpenNI::generateDepthPixels() {
 	
 	// get the pixels
 	const XnDepthPixel* depth = g_DepthMD.Data();
-	XN_ASSERT(depth);
 	
 	if (g_DepthMD.FrameID() == 0) return;
 	
@@ -613,11 +526,11 @@ void ofxOpenNI::generateDepthPixels(){
 			
 			XnUInt16 col_index;
 			
-			switch (depthColoring){
+			switch (depthColoring) {
 				case COLORING_PSYCHEDELIC_SHADES:
 					alpha *= (((XnFloat)(*depth % 10) / 20) + 0.5);
 				case COLORING_PSYCHEDELIC:
-					switch ((*depth/10) % 10){
+					switch ((*depth/10) % 10) {
 						case 0:
 							red = 255;
 							break;
@@ -743,70 +656,64 @@ void ofxOpenNI::generateDepthPixels(){
 }
 
 //--------------------------------------------------------------
-int ofxOpenNI::getNumDevices() {
-	return numDevices;
+//xn::Device& ofxOpenNI::getDevice() {
+//	return g_Device;
+//}
+
+//--------------------------------------------------------------
+xn::DepthGenerator& ofxOpenNI::getDepthGenerator() {
+	return openNIContext->getDepthGenerator(instanceID);
 }
 
 //--------------------------------------------------------------
-xn::Device& ofxOpenNI::getDevice(){
-	return g_Device;
+xn::ImageGenerator& ofxOpenNI::getImageGenerator() {
+	return openNIContext->getImageGenerator(instanceID);;
 }
 
 //--------------------------------------------------------------
-xn::DepthGenerator& ofxOpenNI::getDepthGenerator(){
-	return g_Depth;
+xn::IRGenerator& ofxOpenNI::getIRGenerator() {
+	return openNIContext->getIRGenerator(instanceID);;
 }
 
 //--------------------------------------------------------------
-xn::ImageGenerator& ofxOpenNI::getImageGenerator(){
-	return g_Image;;
+xn::AudioGenerator& ofxOpenNI::getAudioGenerator() {
+	return openNIContext->getAudioGenerator(instanceID);;
 }
 
 //--------------------------------------------------------------
-xn::IRGenerator& ofxOpenNI::getIRGenerator(){
-	return g_IR;;
+xn::Player& ofxOpenNI::getPlayer() {
+	return openNIContext->getPlayer(instanceID);;
 }
 
 //--------------------------------------------------------------
-xn::AudioGenerator& ofxOpenNI::getAudioGenerator(){
-	return g_Audio;;
-}
-
-//--------------------------------------------------------------
-xn::Player& ofxOpenNI::getPlayer(){
-	return g_Player;
-}
-
-//--------------------------------------------------------------
-xn::DepthMetaData& ofxOpenNI::getDepthMetaData(){
+xn::DepthMetaData& ofxOpenNI::getDepthMetaData() {
 	return g_DepthMD;
 }
 
 //--------------------------------------------------------------
-xn::ImageMetaData& ofxOpenNI::getImageMetaData(){
+xn::ImageMetaData& ofxOpenNI::getImageMetaData() {
 	return g_ImageMD;
 }
 
 //--------------------------------------------------------------
-xn::IRMetaData& ofxOpenNI::getIRMetaData(){
+xn::IRMetaData& ofxOpenNI::getIRMetaData() {
 	return g_IrMD;
 }
 
 //--------------------------------------------------------------
-xn::AudioMetaData& ofxOpenNI::getAudioMetaData(){
+xn::AudioMetaData& ofxOpenNI::getAudioMetaData() {
 	return g_AudioMD;
 }
 
 //--------------------------------------------------------------
-ofPixels& ofxOpenNI::getDepthPixels(){
-	//Poco::ScopedLock<ofMutex> lock(mutex);
+ofPixels& ofxOpenNI::getDepthPixels() {
+	Poco::ScopedLock<ofMutex> lock(mutex);
 	return *currentDepthPixels;
 }
 
 //--------------------------------------------------------------
-ofShortPixels& ofxOpenNI::getDepthRawPixels(){
-	//Poco::ScopedLock<ofMutex> lock(mutex);
-	
+ofShortPixels& ofxOpenNI::getDepthRawPixels() {
+	Poco::ScopedLock<ofMutex> lock(mutex);
 	if (!g_bIsDepthRawOnOption) {
 		ofLogWarning(LOG_NAME) << "g_bIsDepthRawOnOption was disabled, enabling raw pixels";
 		g_bIsDepthRawOnOption = true;
@@ -815,77 +722,77 @@ ofShortPixels& ofxOpenNI::getDepthRawPixels(){
 }
 
 //--------------------------------------------------------------
-ofPixels& ofxOpenNI::getImagePixels(){
-	//Poco::ScopedLock<ofMutex> lock(mutex);
+ofPixels& ofxOpenNI::getImagePixels() {
+	Poco::ScopedLock<ofMutex> lock(mutex);
 	return *currentImagePixels;
 }
 
 //--------------------------------------------------------------
-ofTexture& ofxOpenNI::getDepthTextureReference(){
+ofTexture& ofxOpenNI::getDepthTextureReference() {
 	return depthTexture;
 }
 
 //--------------------------------------------------------------
-ofTexture& ofxOpenNI::getimageTextureReference(){
+ofTexture& ofxOpenNI::getimageTextureReference() {
 	return imageTexture;
 }
 
 //--------------------------------------------------------------
-float ofxOpenNI::getWidth(){
-	if(g_bIsDepthOn){
+float ofxOpenNI::getWidth() {
+	if (g_bIsDepthOn) {
 		return g_DepthMD.XRes();
-	}else if(g_bIsImageOn){
+	}else if (g_bIsImageOn) {
 		return g_ImageMD.XRes();
-	}else if(g_bIsIROn){
+	}else if (g_bIsIROn) {
 		return g_IrMD.XRes();
-	}else{
-		//ofLogWarning(LOG_NAME) << "getWidth() : We haven't yet initialised any generators, so this value returned is returned as 0";
+	} else {
+		ofLogWarning(LOG_NAME) << "getWidth() : We haven't yet initialised any generators, so this value returned is returned as 0";
 		return 0;
 	}
 }
 
 //--------------------------------------------------------------
-float ofxOpenNI::getHeight(){
-	if(g_bIsDepthOn){
+float ofxOpenNI::getHeight() {
+	if (g_bIsDepthOn) {
 		return g_DepthMD.YRes();
-	}else if(g_bIsImageOn){
+	}else if (g_bIsImageOn) {
 		return g_ImageMD.YRes();
-	}else if(g_bIsIROn){
+	}else if (g_bIsIROn) {
 		return g_IrMD.YRes();
-	}else{
-		//ofLogWarning(LOG_NAME) << "getHeight() : We haven't yet initialised any generators, so this value returned is returned as 0";
+	} else {
+		ofLogWarning(LOG_NAME) << "getHeight() : We haven't yet initialised any generators, so this value returned is returned as 0";
 		return 0;
 	}
 }
 
 //--------------------------------------------------------------
-ofPoint ofxOpenNI::worldToProjective(const ofPoint& p){
+ofPoint ofxOpenNI::worldToProjective(const ofPoint& p) {
 	XnVector3D world = toXn(p);
 	return worldToProjective(world);
 }
 
 //--------------------------------------------------------------
-ofPoint ofxOpenNI::worldToProjective(const XnVector3D& p){
+ofPoint ofxOpenNI::worldToProjective(const XnVector3D& p) {
 	XnVector3D proj;
-	g_Depth.ConvertRealWorldToProjective(1,&p,&proj);
+	openNIContext->getDepthGenerator(instanceID).ConvertRealWorldToProjective(1,&p,&proj);
 	return toOf(proj);
 }
 
 //--------------------------------------------------------------
-ofPoint ofxOpenNI::projectiveToWorld(const ofPoint& p){
+ofPoint ofxOpenNI::projectiveToWorld(const ofPoint& p) {
 	XnVector3D proj = toXn(p);
 	return projectiveToWorld(proj);
 }
 
 //--------------------------------------------------------------
-ofPoint ofxOpenNI::projectiveToWorld(const XnVector3D& p){
+ofPoint ofxOpenNI::projectiveToWorld(const XnVector3D& p) {
 	XnVector3D world;
-	g_Depth.ConvertProjectiveToRealWorld(1,&p,&world);
+	openNIContext->getDepthGenerator(instanceID).ConvertProjectiveToRealWorld(1,&p,&world);
 	return toOf(world);
 }
 
 //--------------------------------------------------------------
-ofPoint ofxOpenNI::cameraToWorld(const ofVec2f& c){
+ofPoint ofxOpenNI::cameraToWorld(const ofVec2f& c) {
 	vector<ofVec2f> vc(1, c);
 	vector<ofVec3f> vw(1);
 	
@@ -895,7 +802,7 @@ ofPoint ofxOpenNI::cameraToWorld(const ofVec2f& c){
 }
 
 //--------------------------------------------------------------
-void ofxOpenNI::cameraToWorld(const vector<ofVec2f>& c, vector<ofVec3f>& w){
+void ofxOpenNI::cameraToWorld(const vector<ofVec2f>& c, vector<ofVec3f>& w) {
 	const int nPoints = c.size();
 	w.resize(nPoints);
 	if (!g_bIsDepthRawOnOption) {
@@ -920,51 +827,11 @@ void ofxOpenNI::cameraToWorld(const vector<ofVec2f>& c, vector<ofVec3f>& w){
 	}
 	//unlock();
 	
-	g_Depth.ConvertProjectiveToRealWorld(nPoints,&projective[0], (XnPoint3D*)&w[0]);
+	openNIContext->getDepthGenerator(instanceID).ConvertProjectiveToRealWorld(nPoints,&projective[0], (XnPoint3D*)&w[0]);
 	
 }
 
-
 //--------------------------------------------------------------
-bool ofxOpenNI::addLicence(string sVendor, string sKey) {
-	
-	XnLicense license = {0};
-	XnStatus nRetVal = XN_STATUS_OK;
-	bool ok = true;
-	
-	nRetVal = xnOSStrNCopy(license.strVendor, sVendor.c_str(),sVendor.size(), sizeof(license.strVendor));
-	if(nRetVal != XN_STATUS_OK) {
-		ofLogError(LOG_NAME) << "Error creating vendor:" << sVendor;
-		ok = false;
-	}
-	
-	nRetVal = xnOSStrNCopy(license.strKey, sKey.c_str(), sKey.size(), sizeof(license.strKey));
-	if(nRetVal != XN_STATUS_OK) {
-		ofLogError(LOG_NAME) << "Error creating keyy:" << sKey;
-		ok = false;
-	}	
-	
-	nRetVal = g_Context.AddLicense(license);
-	ofLogVerbose(LOG_NAME) << "Adding licence:" << sVendor << sKey << xnGetStatusString(nRetVal);
-	
-	if(nRetVal != XN_STATUS_OK) ok = false;
-	
-	return ok;
-	
-	//xnPrintRegisteredLicenses();
-}
-
-//--------------------------------------------------------------
-void ofxOpenNI::setLogLevel(XnLogSeverity logLevel) {
-	
-	XnStatus nRetVal = XN_STATUS_OK;
-	nRetVal = xnLogSetConsoleOutput(true);
-	
-	ofLogVerbose(LOG_NAME) << "Set log to console:" << xnGetStatusString(nRetVal);
-	
-	nRetVal = xnLogSetSeverityFilter(logLevel);	// TODO: set different log levels with code; enable and disable functionality
-	ofLogVerbose(LOG_NAME) << "Set log level:" << xnGetStatusString(nRetVal) << logLevel;
-	
-	xnLogSetMaskState(XN_LOG_MASK_ALL, TRUE);
-	
+int ofxOpenNI::getNumDevices() {
+	return numDevices;
 }

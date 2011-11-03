@@ -2,26 +2,21 @@
 
 //--------------------------------------------------------------
 void testApp::setup() {
-
 	ofSetLogLevel(ofxOpenNI::LOG_NAME, OF_LOG_VERBOSE);
-	//ofSetLogLevel(ofxOpenNIContext::LOG_NAME, OF_LOG_VERBOSE);
-	//ofSetLogLevel(ofxOpenNIDevice::LOG_NAME, OF_LOG_VERBOSE);
-	
+	ofSetLogLevel(ofxOpenNIContext::LOG_NAME, OF_LOG_VERBOSE);
+
 	openNI[0].setup();
 	openNI[0].addDepthGenerator();
 	openNI[0].addImageGenerator();
 	openNI[1].setup();
 	openNI[1].addDepthGenerator();
 	openNI[1].addImageGenerator();
-
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
-
 	openNI[0].update();
 	openNI[1].update();
-
 }
 
 //--------------------------------------------------------------
