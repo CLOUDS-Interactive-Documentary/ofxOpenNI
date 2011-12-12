@@ -1,0 +1,58 @@
+COMPILING AND CREATING THE BINARIES FOR ofxOpenni
+----------------------------------------------------------------
+
+INTRODUCTION
+=============
+This repository compiles OpenNI and the PrimeSense/Sensor
+module for the ofxOpenNI addon for the Mac. In the future this
+will be used for the windows versions as well.
+
+OpenNI uses dynamically loaded libraries which are loaded at
+runtime. Your application which uses OpenNI need to have these
+files. On Mac these are the "*.dylib" files. The Mac version
+of ofxOpenNI, has a subdirectory caled "copy_to_data_path". The
+contents of this directory should be copie dot your data path.
+That's all. You don't need to install anything which makes your
+application portable.
+
+COMPILING OPENNI + SENSORKINECT FOR MAC
+=======================================
+If you just want to use the addon you can skip this part.
+
+# get repositories
+mkdir openni_dev
+cd openni_dev
+git clone git@github.com:roxlu/OpenNI.git
+git clone git@github.com:roxlu/SensorKinect.git
+
+# compile openNI
+cd OpenNI/Platform/Mac/Bin/openFrameworks
+./build.sh
+make 
+make install
+
+# compile SensorKinect
+cd SensorKinect/Platform/Mac/Bin/openFrameworks
+./build.sh
+make
+make install
+
+FIXING NITE LIBRARIES
+=====================
+Next thing you need to do is download the Nite binaries and extract it to
+a directory called "nite" (same level as OpenNI and SensorKinect).
+I assume you extracted the NITE-binary into the nite directory.
+
+cp OpenNI/Platform/Mac/Bin/openFrameworks/nite* nite/
+cd nite
+./nite_copy_to_openframeworks.sh
+./nite_change_rpaths
+
+
+COPYING CREATED DYNAMIC LIBRARIES
+=================================
+Once you've followed the above steps, you'll have an newly
+created directory called "OpenNI_openFrameworks/openni" which
+contains all of the libraries you need to run openni on your
+Mac (w/o installing anything else).
+
