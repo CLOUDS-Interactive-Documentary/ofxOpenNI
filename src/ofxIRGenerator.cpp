@@ -76,3 +76,7 @@ bool ofxIRGenerator::setup(ofxOpenNIContext* pContext) {
 xn::IRGenerator& ofxIRGenerator::getXnIRGenerator(){
 	return ir_generator;
 }
+
+unsigned char* ofxIRGenerator::getIRPixels(){
+	return ir_pixels;
+}

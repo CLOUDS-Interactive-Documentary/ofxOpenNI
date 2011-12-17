@@ -16,6 +16,7 @@ public:
 	
 	xn::IRGenerator& getXnIRGenerator();
 	
+	unsigned char* getIRPixels();
 //	ofxIRGenerator(ofxIRGenerator const& mom);
 //	ofxIRGenerator & operator = (const ofxIRGenerator& mom);
 	

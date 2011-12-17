@@ -43,6 +43,8 @@ ofxDepthGenerator::ofxDepthGenerator(){
 	CreateRainbowPallet();	
 	depth_coloring = COLORING_RAINBOW;
 	max_number_depths = 1;
+	last_frame_id = 0;
+	frame_is_new = false;
 }
 
 bool ofxDepthGenerator::setup(ofxOpenNIContext* pContext) {
@@ -92,6 +94,7 @@ bool ofxDepthGenerator::setup(ofxOpenNIContext* pContext) {
 	return true;
 }
 void ofxDepthGenerator::update() {
+	frame_is_new = false;
 	// get meta-data
 	depth_generator.GetMetaData(dmd);
 	generateTexture();
@@ -215,9 +218,15 @@ void ofxDepthGenerator::generateTexture(){
 	// get the pixels
 	const XnDepthPixel* depth = dmd.Data();
 	XN_ASSERT(depth);
-	
-	if (dmd.FrameID() == 0) return;
 
+	//if (dmd.FrameID() == 0) return;
+	if(dmd.FrameID() == last_frame_id) return;
+	
+	last_frame_id = dmd.FrameID();
+	frame_is_new = true;
+	
+	//cout << "frame id is " << dmd.FrameID() << endl;
+	
 	// copy depth into texture-map
 	float max;
 	for (XnUInt16 y = dmd.YOffset(); y < dmd.YRes() + dmd.YOffset(); y++) {
@@ -357,6 +366,14 @@ void ofxDepthGenerator::generateTexture(){
 	}
 	
 	depth_texture.loadData((unsigned char *)depth_pixels, dmd.XRes(), dmd.YRes(), GL_RGBA);	
+}
+
+bool ofxDepthGenerator::isFrameNew(){
+	return frame_is_new;
+}
+
+const XnDepthPixel* ofxDepthGenerator::getRawDepthPixels(){
+	return dmd.Data();
 }
 
 

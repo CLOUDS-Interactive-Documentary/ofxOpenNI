@@ -52,6 +52,9 @@ public:
 	ofColor				getPixelColor(const ofPoint & p);
 	int					getPixelDepth(int x, int y);
 	
+	bool				isFrameNew();
+	const XnDepthPixel*	getRawDepthPixels();
+	
 private:
 	
 	void				generateTexture();
@@ -69,6 +72,9 @@ private:
 	unsigned char*		maskPixels[MAX_NUMBER_DEPTHS];
 	depth_threshold		depth_thresholds[MAX_NUMBER_DEPTHS];
 	int					max_number_depths;
+	
+	int					last_frame_id;
+	bool				frame_is_new;
 	
 	ofxDepthGenerator(const ofxDepthGenerator& other);
 	ofxDepthGenerator& operator = (const ofxDepthGenerator&);

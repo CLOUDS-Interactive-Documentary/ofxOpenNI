@@ -49,6 +49,19 @@
 		E4C2424810CC5A17004149E2 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4C2424510CC5A17004149E2 /* Cocoa.framework */; };
 		E4C2424910CC5A17004149E2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4C2424610CC5A17004149E2 /* IOKit.framework */; };
 		E4EB6799138ADC1D00A09F29 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBAB23BE13894E4700AA2426 /* GLUT.framework */; };
+		E78116BF1496A1C900DDFB1C /* libXnVHandGenerator_1_5_0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116B31496A1C900DDFB1C /* libXnVHandGenerator_1_5_0.dylib */; };
+		E78116C01496A1C900DDFB1C /* libXnVFeatures_1_5_0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116B41496A1C900DDFB1C /* libXnVFeatures_1_5_0.dylib */; };
+		E78116C11496A1C900DDFB1C /* libXnVNITE.jni.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116B51496A1C900DDFB1C /* libXnVNITE.jni.dylib */; };
+		E78116C21496A1C900DDFB1C /* libXnVNite_1_5_0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116B61496A1C900DDFB1C /* libXnVNite_1_5_0.dylib */; };
+		E78116C31496A1C900DDFB1C /* libXnVCNITE_1_5_0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116B71496A1C900DDFB1C /* libXnVCNITE_1_5_0.dylib */; };
+		E78116C41496A1C900DDFB1C /* libXnFormats.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116B81496A1C900DDFB1C /* libXnFormats.dylib */; };
+		E78116C51496A1C900DDFB1C /* libXnDeviceSensorV2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116B91496A1C900DDFB1C /* libXnDeviceSensorV2.dylib */; };
+		E78116C61496A1C900DDFB1C /* libXnDeviceFile.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116BA1496A1C900DDFB1C /* libXnDeviceFile.dylib */; };
+		E78116C71496A1C900DDFB1C /* libXnDDK.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116BB1496A1C900DDFB1C /* libXnDDK.dylib */; };
+		E78116C81496A1C900DDFB1C /* libXnCore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116BC1496A1C900DDFB1C /* libXnCore.dylib */; };
+		E78116C91496A1C900DDFB1C /* libOpenNI.jni.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116BD1496A1C900DDFB1C /* libOpenNI.jni.dylib */; };
+		E78116CA1496A1CA00DDFB1C /* libOpenNI.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116BE1496A1C900DDFB1C /* libOpenNI.dylib */; };
+		E78116CC1496A23E00DDFB1C /* libusb-1.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E78116CB1496A23E00DDFB1C /* libusb-1.0.0.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -266,6 +279,19 @@
 		E4C2424610CC5A17004149E2 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
 		E4EB691F138AFCF100A09F29 /* CoreOF.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = CoreOF.xcconfig; path = ../../../libs/openFrameworksCompiled/project/osx/CoreOF.xcconfig; sourceTree = SOURCE_ROOT; };
 		E4EB6923138AFD0F00A09F29 /* Project.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
+		E78116B31496A1C900DDFB1C /* libXnVHandGenerator_1_5_0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libXnVHandGenerator_1_5_0.dylib; path = /usr/lib/libXnVHandGenerator_1_5_0.dylib; sourceTree = "<absolute>"; };
+		E78116B41496A1C900DDFB1C /* libXnVFeatures_1_5_0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libXnVFeatures_1_5_0.dylib; path = /usr/lib/libXnVFeatures_1_5_0.dylib; sourceTree = "<absolute>"; };
+		E78116B51496A1C900DDFB1C /* libXnVNITE.jni.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libXnVNITE.jni.dylib; path = /usr/lib/libXnVNITE.jni.dylib; sourceTree = "<absolute>"; };
+		E78116B61496A1C900DDFB1C /* libXnVNite_1_5_0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libXnVNite_1_5_0.dylib; path = /usr/lib/libXnVNite_1_5_0.dylib; sourceTree = "<absolute>"; };
+		E78116B71496A1C900DDFB1C /* libXnVCNITE_1_5_0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libXnVCNITE_1_5_0.dylib; path = /usr/lib/libXnVCNITE_1_5_0.dylib; sourceTree = "<absolute>"; };
+		E78116B81496A1C900DDFB1C /* libXnFormats.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libXnFormats.dylib; path = /usr/lib/libXnFormats.dylib; sourceTree = "<absolute>"; };
+		E78116B91496A1C900DDFB1C /* libXnDeviceSensorV2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libXnDeviceSensorV2.dylib; path = /usr/lib/libXnDeviceSensorV2.dylib; sourceTree = "<absolute>"; };
+		E78116BA1496A1C900DDFB1C /* libXnDeviceFile.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libXnDeviceFile.dylib; path = /usr/lib/libXnDeviceFile.dylib; sourceTree = "<absolute>"; };
+		E78116BB1496A1C900DDFB1C /* libXnDDK.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libXnDDK.dylib; path = /usr/lib/libXnDDK.dylib; sourceTree = "<absolute>"; };
+		E78116BC1496A1C900DDFB1C /* libXnCore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libXnCore.dylib; path = /usr/lib/libXnCore.dylib; sourceTree = "<absolute>"; };
+		E78116BD1496A1C900DDFB1C /* libOpenNI.jni.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libOpenNI.jni.dylib; path = /usr/lib/libOpenNI.jni.dylib; sourceTree = "<absolute>"; };
+		E78116BE1496A1C900DDFB1C /* libOpenNI.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libOpenNI.dylib; path = /usr/lib/libOpenNI.dylib; sourceTree = "<absolute>"; };
+		E78116CB1496A23E00DDFB1C /* libusb-1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libusb-1.0.0.dylib"; path = "/opt/local/lib/libusb-1.0.0.dylib"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -301,6 +327,19 @@
 				7786AFF013C851A200769F2B /* libXnVFeatures_1_3_1.dylib in Frameworks */,
 				7786AFF113C851A200769F2B /* libXnVHandGenerator_1_3_1.dylib in Frameworks */,
 				7786AFF213C851A200769F2B /* libXnVNite_1_3_1.dylib in Frameworks */,
+				E78116BF1496A1C900DDFB1C /* libXnVHandGenerator_1_5_0.dylib in Frameworks */,
+				E78116C01496A1C900DDFB1C /* libXnVFeatures_1_5_0.dylib in Frameworks */,
+				E78116C11496A1C900DDFB1C /* libXnVNITE.jni.dylib in Frameworks */,
+				E78116C21496A1C900DDFB1C /* libXnVNite_1_5_0.dylib in Frameworks */,
+				E78116C31496A1C900DDFB1C /* libXnVCNITE_1_5_0.dylib in Frameworks */,
+				E78116C41496A1C900DDFB1C /* libXnFormats.dylib in Frameworks */,
+				E78116C51496A1C900DDFB1C /* libXnDeviceSensorV2.dylib in Frameworks */,
+				E78116C61496A1C900DDFB1C /* libXnDeviceFile.dylib in Frameworks */,
+				E78116C71496A1C900DDFB1C /* libXnDDK.dylib in Frameworks */,
+				E78116C81496A1C900DDFB1C /* libXnCore.dylib in Frameworks */,
+				E78116C91496A1C900DDFB1C /* libOpenNI.jni.dylib in Frameworks */,
+				E78116CA1496A1CA00DDFB1C /* libOpenNI.dylib in Frameworks */,
+				E78116CC1496A23E00DDFB1C /* libusb-1.0.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -561,6 +600,7 @@
 		BB4B014C10F69532006C3DED /* addons */ = {
 			isa = PBXGroup;
 			children = (
+				E78116B21496A1A300DDFB1C /* lib */,
 				7786B07713C851BF00769F2B /* src */,
 				7786AFF313C851BA00769F2B /* include */,
 				7786AFD413C851A200769F2B /* lib */,
@@ -642,6 +682,26 @@
 				E4B6FCAD0C3E899E008CF71C /* openFrameworks-Info.plist */,
 			);
 			name = openFrameworks;
+			sourceTree = "<group>";
+		};
+		E78116B21496A1A300DDFB1C /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				E78116CB1496A23E00DDFB1C /* libusb-1.0.0.dylib */,
+				E78116B31496A1C900DDFB1C /* libXnVHandGenerator_1_5_0.dylib */,
+				E78116B41496A1C900DDFB1C /* libXnVFeatures_1_5_0.dylib */,
+				E78116B51496A1C900DDFB1C /* libXnVNITE.jni.dylib */,
+				E78116B61496A1C900DDFB1C /* libXnVNite_1_5_0.dylib */,
+				E78116B71496A1C900DDFB1C /* libXnVCNITE_1_5_0.dylib */,
+				E78116B81496A1C900DDFB1C /* libXnFormats.dylib */,
+				E78116B91496A1C900DDFB1C /* libXnDeviceSensorV2.dylib */,
+				E78116BA1496A1C900DDFB1C /* libXnDeviceFile.dylib */,
+				E78116BB1496A1C900DDFB1C /* libXnDDK.dylib */,
+				E78116BC1496A1C900DDFB1C /* libXnCore.dylib */,
+				E78116BD1496A1C900DDFB1C /* libOpenNI.jni.dylib */,
+				E78116BE1496A1C900DDFB1C /* libOpenNI.dylib */,
+			);
+			name = lib;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -900,6 +960,7 @@
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_7)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_8)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_9)",
+					/opt/local/lib,
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../addons/ofxOpenCv/libs/opencv/lib/android/armeabi\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SRCROOT)/../../../addons/ofxOpenCv/libs/opencv/lib/android/armeabi-v7a\"";
@@ -1004,6 +1065,7 @@
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_7)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_8)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+					/opt/local/lib,
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/bin/data/openni/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../addons/ofxOpenCv/libs/opencv/lib/android/armeabi\"";
