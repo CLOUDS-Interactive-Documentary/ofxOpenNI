@@ -10,7 +10,7 @@ public:
 	ofxImageGenerator();
 	~ofxImageGenerator();
 	
-	bool setup(ofxOpenNIContext* pContext);
+	bool setup(ofxOpenNIContext* pContext, int deviceId = 0);
 	void update();
 	void draw(float x=0, float y=0, float w=640, float h=480);
 	

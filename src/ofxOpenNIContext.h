@@ -7,6 +7,8 @@
 #include <XnLog.h>
 #include "ofMain.h"
 
+using namespace xn;
+
 class ofxOpenNIContext {
 
 public:
@@ -38,17 +40,23 @@ public:
 	bool setMirror(XnBool mirroring);
 
 	void shutdown();
+	bool createXnNode(XnProductionNodeType type, ProductionNode & node, int nodeIndex);
 
 	xn::Context& getXnContext();
 
 private:
 
+	
 	bool initContext();
 	void addLicense(std::string sVendor, std::string sKey);
 	void logErrors(xn::EnumerationErrors& rErrors);
 
+	int enumerateXnNode(XnProductionNodeType type, NodeInfoList & list);
+	bool addDeviceNode(int deviceID);
+
 	bool is_using_recording;
 	xn::Context context;
+	vector<xn::Device> g_Device;
 
 };
 

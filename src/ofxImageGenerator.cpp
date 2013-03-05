@@ -27,25 +27,27 @@ void ofxImageGenerator::draw(float x, float y, float w, float h){
 	image_texture.draw(x, y, w, h);		
 }
 
-bool ofxImageGenerator::setup(ofxOpenNIContext* pContext) {
+bool ofxImageGenerator::setup(ofxOpenNIContext* pContext, int deviceId) {
 	
 	XnStatus result = XN_STATUS_OK;	
 	XnMapOutputMode map_mode;
 	
 	// check we don't already have an IR generator -> can only have an image OR an ir gen
 	xn::IRGenerator ir_generator;
-	if(pContext->getIRGenerator(&ir_generator)) {
-		printf("Can't init image generator: can only have image OR IR gen, not both!!!");
-		return false;
-	}
+//	if(pContext->getIRGenerator(&ir_generator)) {
+//		printf("Can't init image generator: can only have image OR IR gen, not both!!!");
+//		return false;
+//	}
 	
-	// Try to fetch image generator before creating one
-	if(pContext->getImageGenerator(&image_generator)) {
-		// found the image generator so set map_mode from it
-		image_generator.GetMapOutputMode(map_mode);
-	} else {
-		result = image_generator.Create(pContext->getXnContext());
-		CHECK_RC(result, "Creating image generator");
+//	// Try to fetch image generator before creating one
+//	if(pContext->getImageGenerator(&image_generator)) {
+//		// found the image generator so set map_mode from it
+//		image_generator.GetMapOutputMode(map_mode);
+//	} else {
+		bool ok = pContext->createXnNode(XN_NODE_TYPE_IMAGE, image_generator, deviceId);
+
+//		result = image_generator.Create(pContext->getXnContext());
+//		CHECK_RC(result, "Creating image generator");
 		
 		if (result != XN_STATUS_OK) return false;
 		
@@ -55,7 +57,7 @@ bool ofxImageGenerator::setup(ofxOpenNIContext* pContext) {
 		map_mode.nFPS  = 30;
 		
 		image_generator.SetMapOutputMode(map_mode);
-	}
+//	}
 
 	// TODO: add capability for b+w depth maps (more efficient for draw)
 	image_texture.allocate(map_mode.nXRes, map_mode.nYRes, GL_RGB);		

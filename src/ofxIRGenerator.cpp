@@ -31,36 +31,38 @@ void ofxIRGenerator::draw(float x, float y, float w, float h){
 	ir_texture.draw(x, y, w, h);		
 }
 
-bool ofxIRGenerator::setup(ofxOpenNIContext* pContext) {
+bool ofxIRGenerator::setup(ofxOpenNIContext* pContext, int deviceId) {
 	
 	XnStatus result = XN_STATUS_OK;	
 	XnMapOutputMode map_mode;
 	
 	// check we don't already have an image generator -> can only have an image OR an ir gen
-	xn::ImageGenerator image_generator;
-	if(pContext->getImageGenerator(&image_generator)) {
-		printf("Can't init IR generator: can only have image OR IR gen, not both!!!");
-		return false;
-	}
+//	xn::ImageGenerator image_generator;
+//	if(pContext->getImageGenerator(&image_generator)) {
+//		printf("Can't init IR generator: can only have image OR IR gen, not both!!!");
+//		return false;
+//	}
 	
 	// Try to fetch ir generator before creating one
-	if(pContext->getIRGenerator(&ir_generator)) {
-		// found the ir generator so set map_mode from it
-		ir_generator.GetMapOutputMode(map_mode);
-	} else {
-		result = ir_generator.Create(pContext->getXnContext());
-		CHECK_RC(result, "Creating IR generator");
+//	if(pContext->getIRGenerator(&ir_generator)) {
+//		// found the ir generator so set map_mode from it
+//		ir_generator.GetMapOutputMode(map_mode);
+//	} else {
+//		result = ir_generator.Create(pContext->getXnContext());
+//		CHECK_RC(result, "Creating IR generator");
 		
-		if (result != XN_STATUS_OK) return false;
-		
+//		if (result != XN_STATUS_OK) return false;
+		bool ok = pContext->createXnNode(XN_NODE_TYPE_IR, ir_generator, deviceId);
+		if(!ok) return false;
+	
 		// make new map mode -> default to 640 x 480 @ 30fps
 		map_mode.nXRes = XN_VGA_X_RES;
 		map_mode.nYRes = XN_VGA_Y_RES;
 		map_mode.nFPS  = 30;
 		
 		ir_generator.SetMapOutputMode(map_mode);
-	}
-	
+//	}
+
 	ir_texture.allocate(map_mode.nXRes, map_mode.nYRes, GL_LUMINANCE);		
 	ir_pixels = new unsigned char[map_mode.nXRes * map_mode.nYRes ];
 	memset(ir_pixels, 0, map_mode.nXRes * map_mode.nYRes * sizeof(unsigned char));

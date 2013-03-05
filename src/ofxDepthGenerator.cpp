@@ -47,20 +47,32 @@ ofxDepthGenerator::ofxDepthGenerator(){
 	frame_is_new = false;
 }
 
-bool ofxDepthGenerator::setup(ofxOpenNIContext* pContext) {
+//--------------------------------------------------------------
+//bool ofxOpenNIContext::addDepthNode(int deviceID){
+//    int originalSize = g_Depth.size();
+//    if (g_Depth.size() < deviceID + 1) g_Depth.resize(deviceID + 1);
+//    bool ok = createXnNode(XN_NODE_TYPE_DEPTH, g_Depth[deviceID], deviceID);
+//    if (!ok) g_Depth.resize(originalSize);
+//    if (ok) bPaused = false;
+//    return ok;
+//}
+
+bool ofxDepthGenerator::setup(ofxOpenNIContext* pContext, int deviceId) {
 
 	XnStatus result = XN_STATUS_OK;	
 	XnMapOutputMode map_mode; 
 	
 	// Try to fetch depth generator before creating one
-	if(pContext->getDepthGenerator(&depth_generator)) {
-		// found the depth generator so set map_mode from it
-		depth_generator.GetMapOutputMode(map_mode);
-	} else {
-		result = depth_generator.Create(pContext->getXnContext());
-		CHECK_RC(result, "Creating depth generator");
+//	if(pContext->getDepthGenerator(&depth_generator)) {
+//		// found the depth generator so set map_mode from it
+//		depth_generator.GetMapOutputMode(map_mode);
+//	} else {
+		bool ok = pContext->createXnNode(XN_NODE_TYPE_DEPTH, depth_generator, deviceId);
 		
-		if (result != XN_STATUS_OK) return false;
+		//result = depth_generator.Create(pContext->getXnContext());
+		//CHECK_RC(result, "Creating depth generator");
+		if(!ok) return false;
+//		if (result != XN_STATUS_OK) return false;
 		
 		// make new map mode -> default to 640 x 480 @ 30fps
 		map_mode.nXRes = XN_VGA_X_RES;
@@ -68,7 +80,7 @@ bool ofxDepthGenerator::setup(ofxOpenNIContext* pContext) {
 		map_mode.nFPS  = 30;
 		
 		depth_generator.SetMapOutputMode(map_mode);
-	}	
+//	}
 
 	// Default max depth is on GlobalDefaults.ini: MaxDepthValue=10000
 	max_depth	= depth_generator.GetDeviceMaxDepth();		

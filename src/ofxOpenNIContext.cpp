@@ -2,6 +2,7 @@
 #include "ofxDepthGenerator.h"
 #include "ofxOpenNIMacros.h"
 
+
 // Startup
 //----------------------------------------
 ofxOpenNIContext::ofxOpenNIContext() {
@@ -13,9 +14,74 @@ ofxOpenNIContext::ofxOpenNIContext() {
 bool ofxOpenNIContext::initContext(){
 	xn::EnumerationErrors errors;
 	XnStatus result = context.Init();
+	NodeInfoList list;
+	int	numDevices = enumerateXnNode(XN_NODE_TYPE_DEVICE, list);
+	for (int nodeIndex = 0; nodeIndex < numDevices; nodeIndex++) {
+		addDeviceNode(nodeIndex);
+	}
+	
+	cout << "****** FOUND DEVICES " << numDevices << endl;
+	
 	if(result != XN_STATUS_OK) logErrors(errors);
 	BOOL_RC(result, "ofxOpenNIContext.setup()");
 }
+
+//--------------------------------------------------------------
+int ofxOpenNIContext::enumerateXnNode(XnProductionNodeType type, NodeInfoList & list){
+	
+    XnStatus nRetVal = XN_STATUS_OK;
+	EnumerationErrors errors;
+    
+	nRetVal = context.EnumerateProductionTrees(type, NULL, list, &errors);
+    
+//    SHOW_RC(nRetVal, "Enumerated node type: " + getNodeTypeAsString(type));
+	if(nRetVal != XN_STATUS_OK) logErrors(errors);
+    
+	int nodeCount = 0;
+	for (NodeInfoList::Iterator it = list.Begin(); it != list.End(); ++it){
+		nodeCount++;
+	}
+    
+	return nodeCount;
+}
+
+bool ofxOpenNIContext::addDeviceNode(int deviceID){
+    int originalSize = g_Device.size();
+    if (g_Device.size() < deviceID + 1) g_Device.resize(deviceID + 1);
+    bool ok = createXnNode(XN_NODE_TYPE_DEVICE, g_Device[deviceID], deviceID);
+    if (!ok) g_Device.resize(originalSize);
+//    if (ok) bPaused = false;
+    return ok;
+}
+
+bool ofxOpenNIContext::createXnNode(XnProductionNodeType type, ProductionNode & node, int nodeIndex){
+	
+    XnStatus nRetVal = XN_STATUS_OK;
+    NodeInfoList list;
+	EnumerationErrors errors;
+    
+	int nodeCount = enumerateXnNode(type, list);
+	cout << "NODE COUNT IS " << nodeCount << endl;
+    if (nodeIndex + 1 > nodeCount){
+//        ofLogError(LOG_NAME) << "Requested nodeIndex" << nodeIndex << "> total nodeCount for" << getNodeTypeAsString(type);
+        return false;
+    }
+    
+    NodeInfoList::Iterator it = list.Begin();
+    for (int i = 0; i < nodeIndex; i++) it++;
+    
+    NodeInfo nInfo = *it;
+    nInfo.GetInstance(node);
+    
+    XnBool bExists = node.IsValid();
+    if(!bExists){
+        nRetVal = context.CreateProductionTree(nInfo, node);
+//        SHOW_RC(nRetVal, "Creating node " + (string)node.GetName());
+    }
+    return (nRetVal == XN_STATUS_OK);
+}
+
+
 
 // Initialize using an .ONI recording.
 //----------------------------------------
